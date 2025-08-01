@@ -20,7 +20,7 @@ def generate_workout(data: WorkoutRequest):
     )
 
     response = client.chat.completions.create(
-        model="gpt-4",
+        model="gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": "You are a fitness coach."},
             {"role": "user", "content": prompt}
