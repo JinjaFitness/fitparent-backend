@@ -1,11 +1,10 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from pydantic import BaseModel
 from openai import OpenAI
 import os
 
 app = FastAPI()
 
-# Initialize OpenAI client with your API key from the environment
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 class WorkoutRequest(BaseModel):
