@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from pydantic import BaseModel
 from openai import OpenAI
 import os
@@ -12,25 +12,27 @@ class WorkoutRequest(BaseModel):
 
 @app.post("/generate-workout")
 def generate_workout(data: WorkoutRequest):
-    prompt = f"""
-You are a certified personal trainer.
-
-{data.input}
-
-Requirements:
-- Provide a complete workout plan for each week.
-- Each week must contain 5 distinct workout days (Day 1–5).
-- Each day must have: **Warm-up**, **Main Workout**, and **Cooldown**.
-- Clearly label: ## Week X and ### Day Y – Title
-- Format in Markdown using **bold** for section headers.
-- Be progressive and suitable for {data.input.lower()}.
-- If asked for 4/6/8 weeks, include all requested weeks in the plan.
-    """
+    prompt = (
+        f"{data.input}\n\n"
+        "Provide the workout plan in this exact structure:\n"
+        "## Week 1\n"
+        "### Day 1 – [Name of Focus]\n"
+        "**Warm-up:**\n"
+        "- Example warm-up 1\n"
+        "- Example warm-up 2\n"
+        "**Main Workout:**\n"
+        "1. Exercise 1\n"
+        "2. Exercise 2\n"
+        "**Cooldown:**\n"
+        "- Stretch 1\n"
+        "- Stretch 2\n"
+        "\nRepeat this format for EVERY day in EVERY week requested. Do not skip weeks. Do not summarize. The full plan must be structured and explicit for all weeks and days."
+    )
 
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
-            {"role": "system", "content": "You are a fitness coach."},
+            {"role": "system", "content": "You are a professional fitness coach. Provide full workout plans with warm-up, main, and cooldown sections per day."},
             {"role": "user", "content": prompt}
         ]
     )
