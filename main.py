@@ -18,35 +18,34 @@ def generate_workout(data: WorkoutRequest):
     match = re.search(r"(\d+)\s*week", input_text.lower())
     num_weeks = int(match.group(1)) if match else 2
 
-    # ✅ Structured prompt with progression and variation
+    # ✅ Strong, clear prompt to force full multi-week response
     prompt = (
         f"Create a {num_weeks}-week home workout program for a {input_text}. "
-        "The user should train 5 days per week (Monday to Friday). Each week must:\n"
-        "- Progress in difficulty (slightly more reps, time, or complexity)\n"
-        "- Use varied exercises across days and weeks\n"
-        "- Remain safe and appropriate for a beginner\n"
-        "- Be time-efficient (total session ~30 minutes)\n"
-        "- Match the user’s goal (e.g. fat loss, strength)\n\n"
+        "The user will train 5 days per week (Monday to Friday). "
+        "You must list **every day** of **every week** clearly.\n\n"
         "Each day must include:\n"
         "- Warm-up (5–10 minutes)\n"
-        "- Main workout (20–40 minutes)\n"
+        "- Main workout (20–30 minutes)\n"
         "- Cooldown (5–10 minutes)\n\n"
-        "Use this format:\n\n"
+        f"You must include exactly {num_weeks} weeks and 5 days per week.\n"
+        "Do not skip any days.\n"
+        "Do not summarize.\n"
+        "Use this format exactly:\n\n"
     )
 
     for week in range(1, num_weeks + 1):
         prompt += f"## Week {week}\n"
         for day in range(1, 6):
             prompt += (
-                f"### Day {day} – [Theme or Focus]\n"
+                f"### Day {day} – [Workout Focus]\n"
                 "**Warm-up:**\n- ...\n"
                 "**Main Workout:**\n- ...\n"
                 "**Cooldown:**\n- ...\n\n"
             )
 
     prompt += (
-        "Ensure clear headings, bullet points, and a professional tone. "
-        "Avoid repetition of exercises across days. Increase challenge subtly each week."
+        "Respond only with the full workout program in markdown-style format. "
+        "Do not explain or add summaries before or after."
     )
 
     response = client.chat.completions.create(
@@ -62,7 +61,7 @@ def generate_workout(data: WorkoutRequest):
                     "- Increase slightly in intensity each week (progressive overload)\n"
                     "- Include exercise variation to prevent boredom\n"
                     "- Be realistic and engaging for parents with limited time\n"
-                    "- Follow structure: Warm-up, Main, Cooldown"
+                    "- Follow structure: Warm-up, Main Workout, Cooldown"
                 )
             },
             {"role": "user", "content": prompt}
