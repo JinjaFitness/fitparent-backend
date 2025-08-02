@@ -1,56 +1,28 @@
-from fastapi import FastAPI
+# backend/main.py
+
+from fastapi import FastAPI, Request
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
-from openai import OpenAI
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
 
 app = FastAPI()
 
-# CORS setup
+# Allow local frontend to talk to backend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Set your frontend origin in production
-    allow_credentials=True,
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# OpenAI setup
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-# Request model
 class WorkoutRequest(BaseModel):
-    goal: str
-    fitness_level: str
-    time: int  # in minutes
-    weeks: int  # number of weeks
+    input: str
 
 @app.post("/generate-workout")
-async def generate_workout(data: WorkoutRequest):
-    prompt = (
-        f"Generate a {data.weeks}-week home workout plan for an {data.fitness_level} individual with a goal of {data.goal}. "
-        f"Each workout should last around {data.time} minutes. Include a warm-up, main workout, and cooldown for each day.\n"
-        f"Use the following format:\n"
-        f"## Week 1\n### Day 1 – [Workout Focus or Name]\n**Warm-up:**\n- Exercise 1\n- Exercise 2\n\n"
-        f"**Main Workout:**\n1. Exercise 1\n2. Exercise 2\n\n**Cooldown:**\n- Stretch 1\n- Stretch 2\n\n"
-        f"Repeat the same format for each day and week. There should be 5 workout days per week. "
-        f"DO NOT skip or summarize any weeks. DO NOT write 'continue this structure'. "
-        f"Only include the workouts, nothing else."
-    )
+async def generate_workout(request: WorkoutRequest):
+    input_text = request.input
 
-    print(f"🔍 Sending input: {prompt}")
+    # Simulate AI workout generation
+    # Replace this with real GPT call or your logic
+    fake_output = f"## Week 1\n### Day 1 – Full Body Strength\n**Warm-up:**\n- Jog x 1 min\n- Arm Circles x 1 min\n\n**Main Workout:**\n1. Squats 3x10\n2. Push-ups 3x10\n\n**Cooldown:**\n- Hamstring Stretch 30 sec each leg\n\n### Day 2 – Cardio\n..."
 
-    response = client.chat.completions.create(
-        model="gpt-4",
-        messages=[
-            {"role": "user", "content": prompt}
-        ],
-        temperature=0.7,
-    )
-
-    result = response.choices[0].message.content.strip()
-
-    return {"workout": result}
+    return {"workout": fake_output}
