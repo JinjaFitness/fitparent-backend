@@ -5,20 +5,18 @@ import os
 
 app = FastAPI()
 
+# Initialize OpenAI client
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+# Expecting a single "input" field from frontend
 class WorkoutRequest(BaseModel):
-    goal: str
-    fitness_level: str
-    time: int
+    input: str
 
 @app.post("/generate-workout")
 def generate_workout(data: WorkoutRequest):
-    prompt = (
-        f"Create a {data.time}-minute home workout for a {data.fitness_level} "
-        f"parent with a goal to {data.goal}. Include warm-up, workout, and cooldown."
-    )
+    prompt = data.input
 
+    # Call OpenAI with the user-defined prompt
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
@@ -27,4 +25,5 @@ def generate_workout(data: WorkoutRequest):
         ]
     )
 
+    # Return workout text
     return {"workout": response.choices[0].message.content}
