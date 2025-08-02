@@ -13,19 +13,27 @@ class WorkoutRequest(BaseModel):
 
 @app.post("/generate-workout")
 def generate_workout(data: WorkoutRequest):
+    # Better structured prompt for a 2-week program
     prompt = (
-        f"Design a workout for a {data.input}. The total duration should match their available time.\n\n"
-        "Respond using this format:\n"
-        "### Warm-up (5–10 minutes)\n"
-        "- Include mobility and light cardio\n\n"
-        "### Main Workout (20–40 minutes)\n"
-        "- Use 3–5 exercises\n"
-        "- Include sets/reps or durations\n"
-        "- Add rest times\n"
-        "- Optional: include a circuit format or EMOM/AMRAP\n\n"
-        "### Cooldown (5–10 minutes)\n"
-        "- Focus on breathing and stretching major muscle groups\n\n"
-        "Make the workout realistic, safe, and goal-appropriate. Use headings and bullet points."
+        f"Create a 2-week home workout program for a {data.input}. "
+        "The user should train 5 days per week (Monday to Friday). "
+        "Each day must include:\n"
+        "- Warm-up (5–10 minutes)\n"
+        "- Main workout (20–40 minutes)\n"
+        "- Cooldown (5–10 minutes)\n\n"
+        "Use this format:\n\n"
+        "## Week 1\n"
+        "### Day 1 – [Workout Title or Goal]\n"
+        "**Warm-up:**\n"
+        "- ...\n"
+        "**Main Workout:**\n"
+        "- ...\n"
+        "**Cooldown:**\n"
+        "- ...\n\n"
+        "Repeat for Day 2 through Day 5.\n\n"
+        "## Week 2\n"
+        "(Same format for Days 1–5)\n\n"
+        "Ensure variety, goal-appropriate exercises, clear formatting, and professional tone."
     )
 
     response = client.chat.completions.create(
