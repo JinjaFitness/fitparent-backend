@@ -13,28 +13,36 @@ class WorkoutRequest(BaseModel):
 
 @app.post("/generate-workout")
 def generate_workout(data: WorkoutRequest):
-    # Improved, structured prompt for more professional plans
     prompt = (
-        data.input + "\n\n"
-        "Format the workout like this:\n"
-        "### Warm-up (5 minutes)\n"
-        "- Light cardio: 2 minutes (e.g., jumping jacks, high knees)\n"
-        "- Dynamic stretches: 3 minutes (e.g., arm circles, lunges)\n\n"
-        "### Workout (25 minutes)\n"
-        "- 3 exercises repeated in a circuit (e.g., squats, push-ups, planks)\n"
-        "- Provide set/reps for each\n"
-        "- Include rest time\n\n"
-        "### Cooldown (5 minutes)\n"
-        "- Static stretches for major muscle groups\n"
-        "- Focus on breathing and recovery\n\n"
-        "Ensure the workout matches the user's goal, fitness level, and total time.\n"
-        "Format clearly using headings and bullet points."
+        f"Design a workout for a {data.input}. The total duration should match their available time.\n\n"
+        "Respond using this format:\n"
+        "### Warm-up (5–10 minutes)\n"
+        "- Include mobility and light cardio\n\n"
+        "### Main Workout (20–40 minutes)\n"
+        "- Use 3–5 exercises\n"
+        "- Include sets/reps or durations\n"
+        "- Add rest times\n"
+        "- Optional: include a circuit format or EMOM/AMRAP\n\n"
+        "### Cooldown (5–10 minutes)\n"
+        "- Focus on breathing and stretching major muscle groups\n\n"
+        "Make the workout realistic, safe, and goal-appropriate. Use headings and bullet points."
     )
 
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
-            {"role": "system", "content": "You are a helpful and professional fitness coach."},
+            {
+                "role": "system",
+                "content": (
+                    "You are an elite certified personal trainer. You design training plans "
+                    "tailored to individual goals and experience levels. Each workout must be:\n"
+                    "- Well-balanced (push/pull, upper/lower body)\n"
+                    "- Goal-specific (fat loss, endurance, strength, etc.)\n"
+                    "- Scaled for fitness level (beginner, intermediate, advanced)\n"
+                    "- Structured with a warm-up, main workout, and cooldown\n"
+                    "- Professionally formatted and clear"
+                )
+            },
             {"role": "user", "content": prompt}
         ]
     )
