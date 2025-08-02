@@ -1,40 +1,56 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
 from openai import OpenAI
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = FastAPI()
 
+# CORS setup
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Set your frontend origin in production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# OpenAI setup
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+# Request model
 class WorkoutRequest(BaseModel):
-    input: str
+    goal: str
+    fitness_level: str
+    time: int  # in minutes
+    weeks: int  # number of weeks
 
 @app.post("/generate-workout")
-def generate_workout(data: WorkoutRequest):
+async def generate_workout(data: WorkoutRequest):
     prompt = (
-        f"{data.input}\n\n"
-        "Provide the workout plan in this exact structure:\n"
-        "## Week 1\n"
-        "### Day 1 – [Name of Focus]\n"
-        "**Warm-up:**\n"
-        "- Example warm-up 1\n"
-        "- Example warm-up 2\n"
-        "**Main Workout:**\n"
-        "1. Exercise 1\n"
-        "2. Exercise 2\n"
-        "**Cooldown:**\n"
-        "- Stretch 1\n"
-        "- Stretch 2\n"
-        "\nRepeat this format for EVERY day in EVERY week requested. Do not skip weeks. Do not summarize. The full plan must be structured and explicit for all weeks and days."
+        f"Generate a {data.weeks}-week home workout plan for an {data.fitness_level} individual with a goal of {data.goal}. "
+        f"Each workout should last around {data.time} minutes. Include a warm-up, main workout, and cooldown for each day.\n"
+        f"Use the following format:\n"
+        f"## Week 1\n### Day 1 – [Workout Focus or Name]\n**Warm-up:**\n- Exercise 1\n- Exercise 2\n\n"
+        f"**Main Workout:**\n1. Exercise 1\n2. Exercise 2\n\n**Cooldown:**\n- Stretch 1\n- Stretch 2\n\n"
+        f"Repeat the same format for each day and week. There should be 5 workout days per week. "
+        f"DO NOT skip or summarize any weeks. DO NOT write 'continue this structure'. "
+        f"Only include the workouts, nothing else."
     )
+
+    print(f"🔍 Sending input: {prompt}")
 
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4",
         messages=[
-            {"role": "system", "content": "You are a professional fitness coach. Provide full workout plans with warm-up, main, and cooldown sections per day."},
             {"role": "user", "content": prompt}
-        ]
+        ],
+        temperature=0.7,
     )
 
-    return {"workout": response.choices[0].message.content}
+    result = response.choices[0].message.content.strip()
+
+    return {"workout": result}
