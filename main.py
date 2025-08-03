@@ -1,36 +1,39 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from fastapi.middleware.cors import CORSMiddleware
+from openai import OpenAI
+import os
 
 app = FastAPI()
 
-# Allow frontend access (CORS)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Update this with your frontend URL in production
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Initialize OpenAI client
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# Define the expected request body structure
+# Define the request structure
 class WorkoutRequest(BaseModel):
     goal: str
     level: str
     duration: int
-    time: str
+    weeks: int
 
-# API route to handle workout generation
 @app.post("/generate-workout")
-async def generate_workout(request: WorkoutRequest):
-    # Simulate workout generation
-    sample_workout = f"""
-## Week 1
-### Day 1 – {request.goal.capitalize()} Training
-**Warm-up:**\n- Light jog (5 min)\n- Dynamic stretches
-**Main Workout:**\n- Push-ups, Squats, Planks ({request.duration} mins total)
-**Cooldown:**\n- Light stretching
+def generate_workout(data: WorkoutRequest):
+    prompt = (
+        f"Create a {data.weeks}-week workout plan for a {data.level} user "
+        f"with a goal of {data.goal}. Each workout should be about {data.duration} minutes "
+        f"and include a warm-up, main workout, and cooldown. Provide daily variations for each week."
+    )
 
-...repeat similar structure for more days and weeks...
-"""
-    return {"workout": sample_workout.strip()}
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are a professional fitness coach."},
+                {"role": "user", "content": prompt}
+            ]
+        )
+
+        workout_plan = response.choices[0].message.content
+        return {"workout": workout_plan}
+
+    except Exception as e:
+        return {"error": str(e)}
